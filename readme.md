@@ -63,12 +63,14 @@ RETURN
 
 Cost Growth = [Cost] - CostPriorYear
 ```
+## Filter contex functions
 
-## CALCULATE a handy operation
-This function in DAX is very handy, because let you do a lot of things. The function takes an expresion to evaluate and optianl filters to select the data under different creteria.
+### CALCULATE a filter expresion
+
+This function in DAX is very handy, because let you do a lot of things. The function takes an expresion to evaluate and optional filters to select the data under different criteria.
 `CALCULATE(<expression>, [<filter1>, <filter2>])`
 
-We can use simple to filter data or to more complex things, an example of filtering in a divition is:
+We can filter data or do more complex things, an example of filtering in a divition is:
 ```
 // function to calculate  % increment to respect previous year
 
@@ -81,6 +83,89 @@ RETURN
 DIVIDE ([sales] - salesPreviousYear, salesPreviousYear)
 
 ```
+And this fuction take presedence of any kind of filter so can be used with other functions to avoid to be affected for other filters.
+
+```
+quantity not affected by other filter = 
+CALCULATE(
+    [quantity column], ALL(table)
+)
+```
+
+**Note:** This interactions can be replicated with the  visual interactions but this is not transparent, with a function is easy to undertand how the values are calculated.
+
+### FILTER function
+This function let us to filter by a especific values or values, syntax:
+```
+Total quntity = 
+CALCULATE(
+    [column],
+    FILTER(table,
+            RELATED(OtherTable[column2] =  "value"))
+)
+```
+Here the `RELATED` function is like to import the value of a column from another table by the use of relation between tables and make a desired comparation. `RELATED` is used with `FILTER`.
+
+### Cross Filter
+Cross filter is used  when we desire one specific direction in the relation. This to avoid to use the default direcion relation between tables (override the default direction).
+
+```
+CROSSFILTER (<col1>, <col2>, <direction>)
+```
+
+This functin helps to filter data from one dimenctional data to another, by making a double bidirectional relation between the second dimentioanal data to the fact table.
+
+[crossfilter docs](https://docs.microsoft.com/en-us/dax/crossfilter-function)
+
+## Iterative functions
+
+This function allows to transform the data by row and avoid to create a column or set of columns toa achieve a calculation. This function usually ends with a X, for example, `SUMX`. 
+
+```
+// With out itearative functions
+// Create a column
+takeaway = FactTable[column1] - FactTable[colunm2]
+Total = SUM(FactTable[takeaway])
+
+// With iterative function
+Total = 
+SUMX(FactTable, FactTable[column1]  FactTable[column2])
+
+```
+
+To control how the interact with the values we use normally a `FILTER` function.
+
+```
+SUMX(
+    FILTER(
+        <table>,
+        <filter>
+    ),
+    <expresion>
+)
+```
+### RANKX functions
+
+```
+RANK(
+    <table>,
+    <expression>
+)
+
+```
+This function when is used with a visual is ranked with the visual filtering this can result in weird results as all the rows in a table be 1. This problem can be treated with a filter funtion with RANKX. 
+
+We can use `ALL` to evaluate all the rows, avoiding the visual filtering.
+
+```
+NameRankMeasure = 
+RANKX(
+    ALL(table[columntofilter]),
+    [interest column]
+)
+```
+
+
 ## How to create a data time table
 
 For create a date time table to work with, we can do it with DAX commands, this is, create a table with a simple command  only with  start date and end date:
@@ -109,6 +194,9 @@ This creates a columns with the **Decade** corresponding to each year. As can yo
 
 ## Bideretional Relations
 **Note:** Sometimes this kind of relations can be very inneficient and can be replace with [filter measueres](#filter-measures)
+
+**Note 2:** for security row level is necessary to take other things in consideration [RLS](#row-level-security-rls).
+
 A relation between tables is usually in only one direction but there are circunstances where we can have a bidirectional relation.
 
 The bidirectional relational are useful to filter slicers. When a option doesn't exist in the slicer with this relation we can avoid to show invalid options.
@@ -150,6 +238,52 @@ CustomMeasure = CALCULATE(AVERAGE('TABLE1'[column]),    USERELATION('TABLE1'[col
 
 With this we can have function that behave different and help us to resolve different business question witout duplicate data.
 
+## Row Level-Security (RLS)
+
+Power BI allows to display different information in a visual based in the role of one user. A manager can have total access to the information but regional sales group can only have access to their sales region.
+
+DAX has to function to work these functionalities:
+* `USERPRINCIPALNAME()` Return the user principal name (UPN) of the user viewing the report this is the email address.
+* `USERNAME()` is a alternative method to enable RLS with his own method use cases.
+
+All this operation are done in the graphic interfaz, you need to go to model view and then to Manage Roles then you craate the roles and add the filters to tables.
+
+
+<img src="images/rls.jpg" alt="drawing" width="300"/>
+
+
+**Note:** We need to be carefull because we can find with problems in the relations with tables, for example the visual can have problems to correctly update its values. We need to enable the bidirectinal relation and the security filter option.
+
+## Manipulation tables
+
+* [ADDCOLUMN](https://docs.microsoft.com/en-us/dax/addcolumns-function-dax)
+* [SUMMARIZE](https://docs.microsoft.com/en-us/dax/summarize-function-dax) this fucntion con be very tricky to work with, because its functinality changes with the context therefore is necessary to wrap it with a columns function. The fucntion always return a table.
+```
+ADDCOLUMNS(
+    SUMMARIZE(<Table1>,
+    <group1>,
+    <group2>,
+    <group...>,
+    <groupn>,
+    <name>,
+    <expression>
+    )
+)
+```
+## Time Intelligence Functions
+This kind of functins allows you to compare data with different time periods.
+
+* `NEXTDAY(<dates>)` return the next day,
+* `SAMEPERIODLASTYEAR`  return the same day in the previous year,
+* `DATABETWEEN(<Dates>, <Start Date>, <End Date>)` return a set of dates between specified dates.
+
+Is a good practice to create a dimentional table to process data by a data key. This is because the original table has missing values. Missing values can produce weird behaviour.
+
+You can use `CALENDAR` function to create this table and then linked with a fact table.
+
+As well you can mark a table as date table like this:
+
+<img src="images/datatable.jpg" alt="drawing" width="300" >
 
 # Power Query (M language)
 ## Replacing multiple characters
