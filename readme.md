@@ -310,3 +310,30 @@ Where:
 The other names/varaibles are function part syntax.
 
 This informatin was take from [here](https://www.youtube.com/watch?v=N-0JrYQB0Ag)
+
+# Parameters Power BI
+
+The parameters allows to change the behaviour of Power BI. The parameters can control things like:
+* Filtering
+* Inputs  in custom functions
+* Changing data source funtions
+
+The parameters are configured in Power Query Editor and the properties that can be set include:
+* Name
+* Value
+* Type
+
+We can have dynamic connections with interchangeable servers and databases. And have incremental refresers.
+
+## Incremental updates
+
+Incremental updates has tree part the `archive`, `incremental refresh` and `real time data`. The archive data is only to query historical data, incremental refresh is to update data that could change and real time data is as the name say it. The last option is only for premium Power BI service.
+
+To use incremental updates we need to use the reserved keywords `RangeStart` and `RangeEnd` for the parameters, the parameters has to have date/time type. This can be done in the Power query editor. 
+
+1. Dataset is filtered by `RangeStart` and `RangeEnd`. 
+2. Then, the policy is applied to data, archive data is no longer updated, refresh data  is updated along with the real time data.
+3. When the refresh time period is reached all the window time is rolled based in time column to ajust what data will be now archive, refreshed and real time get it.
+4. `RangeStart` and `RangenEnd` are overriden to ajust the new
+
+More detailed information [here](https://docs.microsoft.com/en-us/power-bi/connect-data/incremental-refresh-overview)
